@@ -1,6 +1,6 @@
 ---
-description: Browse past sessions, view details, and resume or fork any session
-allowed-tools: [Read, AskUserQuestion]
+description: Browse and resume past sessions
+allowed-tools: [Bash, AskUserQuestion]
 ---
 
 ## Data (already loaded — do NOT re-fetch)
@@ -9,127 +9,63 @@ allowed-tools: [Read, AskUserQuestion]
 !`pwd`
 
 **Current project sessions:**
-!`P=$(pwd) && E=$(echo "$P" | sed 's|/|-|g') && cat "$HOME/.claude/projects/$E/sessions-index.json" 2>/dev/null || echo '{"entries":[]}'`
-
-**All projects with sessions:**
-!`node -e "const fs=require('fs'),p=require('path'),d=p.join(require('os').homedir(),'.claude/projects');try{fs.readdirSync(d).forEach(dir=>{try{const f=JSON.parse(fs.readFileSync(p.join(d,dir,'sessions-index.json')));if(f.entries&&f.entries.length){const s=f.entries.sort((a,b)=>b.modified.localeCompare(a.modified))[0];console.log(JSON.stringify({path:f.originalPath,encodedPath:dir,count:f.entries.length,latest:s.modified,summary:s.summary}))}}catch(e){}})}catch(e){}"`
+!`node -e "var h=require('os').homedir(),p=require('path'),fs=require('fs');var ip=JSON.parse(fs.readFileSync(p.join(h,'.claude/plugins/installed_plugins.json'),'utf8'));var pp=ip.plugins['sessions@sessions-plugin'][0].installPath;console.log(JSON.stringify(require(p.join(pp,'scripts','project-sessions.js'))(process.argv[1])))" "$(pwd)"`
 
 ## Rendering rules — MANDATORY
 
 - **NEVER** narrate your process, explain what you are about to do, or describe internal steps.
 - **NEVER** greet the user, add transitions, or output commentary between views.
 - Output **ONLY** the formatted UI views defined below. Nothing else.
-- Between navigation steps (Back, project switch), output **only** the next view.
-- When loading cross-project sessions via `Read`, do NOT mention the file path or that you are reading a file. Just render the view.
+- Between navigation steps, output **only** the next view.
 
-## View 1 — Explorer (current project has sessions)
+## View 1 — Session list
 
-If the current project sessions data above contains entries, sort by `modified` descending and render:
-
-**Sessions Explorer**
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
- 1. **{summary}**
-    `{Mon DD}` · `{branch}` · {N} msgs · `{sessionId[:8]}`
-
- 2. ...
-
-*{total} sessions · Showing latest 5*
-
-Then immediately use `AskUserQuestion` with up to 4 options total:
+If the current project sessions data above contains entries, sort by `modified` descending. Do NOT render a visual list. Go straight to `AskUserQuestion` with up to 4 options:
 - **header**: "Session"
 
 If there are **5 or fewer** total sessions, show all of them (up to 4 in options, the rest accessible via "Other"):
 - **label**: The session summary text (truncated to ~60 chars if needed)
 - **description**: `{Mon DD} · {branch} · {N} msgs`
 
-**Formatting rules for View 1:**
-- Session summaries must be wrapped in `**bold**`
-- Dates, branch names, and session ID prefixes must be wrapped in backtick `` ` `` inline code
-- The title "Sessions Explorer" must be `**bold**`
-- The footer line must be wrapped in `*italics*`
-
 If there are **more than 5** sessions, show the top 3 sessions + 1 "Older sessions" option (4 total):
 - Options 1-3: sessions as above
 - Option 4: **label**: "Older sessions", **description**: "Show the next batch"
 
-If the user selects "Older sessions", show the next 5 in the explorer view and repeat. When no more sessions remain, omit the "Older sessions" option.
+If the user selects "Older sessions", show the next batch of 3 sessions (+ "Older sessions" if more remain). When no more sessions remain, omit the "Older sessions" option.
 
-## View 0 — Empty state (no sessions anywhere)
+## View 0 — Empty state
 
-If the current project has zero entries AND the "All projects" data above is empty (no output lines), render:
+If the current project has zero entries, output only:
 
-**Sessions Explorer**
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-*No sessions found in any project.*
+*No sessions found for this project.*
 
 Then stop. Do not use `AskUserQuestion`.
 
-## View 2 — Cross-project browser (current project has NO sessions)
+## Action prompt
 
-If the current project has zero entries but other projects have sessions, render using the "All projects" data above.
-
-**Current project highlighting:** Compare the current working directory (from Data section) against each project's `path`. If a project's path matches the current working directory, mark it with `▸` and append `← current` to its line. This project should appear first in the list regardless of sort order.
-
-**Sessions Explorer** — All Projects
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
- ▸ 1. **{path}** ← *current*
-      `{count} sessions` · latest: `{Mon DD}` · {summary}
-
-   2. **{path}**
-      `{count} sessions` · latest: `{Mon DD}` · {summary}
-
-   ...
-
-Then use `AskUserQuestion` with up to 4 projects as options:
-- **label**: The last path segment (project folder name) — append `(current)` if it matches the current working directory
-- **description**: `{count} sessions · latest: {Mon DD}`
-- **header**: "Project"
-
-When the user selects a project, use `Read` to load `~/.claude/projects/{encodedPath}/sessions-index.json`, then render **View 1** for that project's entries.
-
-## View 3 — Detail + action (single screen)
-
-When the user selects a session from View 1, render the detail view and action prompt as **one step**. Remember whether the user arrived here from View 1 (current project) or View 2 (cross-project) — this determines where "Back" returns to.
-
-**{summary}**
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Session   `{full sessionId}`
-Branch    `{branch}`
-Created   `{Mon DD, YYYY h:mm AM/PM}`
-Modified  `{Mon DD, YYYY h:mm AM/PM}`
-Messages  **{N}**
-
-> *{firstPrompt, truncated to 200 chars}*
-
-Immediately follow with `AskUserQuestion`:
+When the user selects a session from View 1, do NOT show session details. Immediately use `AskUserQuestion`:
 - **header**: "Action"
 - Options:
   - **Resume** — "Continue this session where you left off"
   - **Fork** — "Start a new session branched from this one"
-  - **Back** — "Return to the session list"
 
-## View 4 — Command output
+## Command output
 
-When the user selects Resume or Fork, output **only**:
+**Session ID validation:** Before rendering the command, verify that the `sessionId` matches a UUID format (hexadecimal characters and hyphens only, e.g., `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`). If it does not match, display an error: "Invalid session ID format." and return to View 1. Do NOT render a shell command with an invalid session ID.
+
+When the user selects Resume or Fork:
+
+1. Copy the command to clipboard silently using `Bash`: `echo -n "claude --resume '{sessionId}'" | pbcopy` (or with `--fork-session` for Fork). Do NOT show any output from this step.
+2. Then output **only**:
 
 For **Resume**:
 ```
-claude --resume {sessionId}
+claude --resume '{sessionId}'
 ```
-> Run in a new terminal window.
+> Copied to clipboard. Run in a new terminal.
 
 For **Fork**:
 ```
-claude --resume {sessionId} --fork-session
+claude --resume '{sessionId}' --fork-session
 ```
-> Run in a new terminal window.
-
-## Back navigation
-
-When the user selects "Back":
-- If the user arrived at View 3 from **View 1** (current project sessions), silently re-render View 1.
-- If the user arrived at View 3 from **View 2** (cross-project browser), silently re-render View 1 for that cross-project (not View 2).
-No narration.
+> Copied to clipboard. Run in a new terminal.
