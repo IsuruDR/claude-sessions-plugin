@@ -1,18 +1,18 @@
 # Sessions Plugin for Claude Code
 
-Browse, search, and manage your past Claude Code sessions across all projects. Quickly view session details, get commands to resume a previous conversation where you left off, or fork it into a new session.
+Browse and resume your past Claude Code sessions. Quickly pick a previous conversation and resume where you left off, or fork it into a new session.
 
 ## Features
 
-- **Cross-project browsing** — View sessions from all your projects in one place
-- **Session details** — See branch, message count, timestamps, and the first prompt at a glance
+- **Browse sessions** — See your recent sessions with AI-generated summaries
 - **Resume** — Continue any past session exactly where you left off
 - **Fork** — Branch off from a previous session into a new one
+- **Clipboard** — Commands are automatically copied to your clipboard
 
 ## Installation
 
 ```bash
-/plugin install https://github.com/isurudr/claude-sessions-plugin
+/install-plugin https://github.com/isurudr/sessions-plugin
 ```
 
 ## Usage
@@ -23,7 +23,7 @@ Run the slash command inside Claude Code:
 /sessions
 ```
 
-This opens an interactive explorer where you can navigate sessions, view details, and choose to resume or fork.
+Pick a session, choose Resume or Fork, and paste the command in a new terminal.
 
 ## Plugin Structure
 
@@ -34,6 +34,8 @@ sessions-plugin/
 │   └── marketplace.json     # Marketplace configuration
 ├── commands/
 │   └── sessions.md          # Sessions slash command
+├── scripts/
+│   └── project-sessions.js  # Session data loader
 └── README.md
 ```
 

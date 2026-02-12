@@ -1,5 +1,11 @@
 const fs = require('fs'), p = require('path'), os = require('os');
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+function isValidUUID(s) {
+  return typeof s === 'string' && UUID_RE.test(s);
+}
+
 function getProjectSessions(cwd) {
   const enc = cwd.split('/').join('-');
   const dir = p.join(os.homedir(), '.claude/projects', enc);
@@ -9,12 +15,14 @@ function getProjectSessions(cwd) {
   try {
     const d = JSON.parse(fs.readFileSync(fp, 'utf8'));
     if (d.entries) {
-      d.entries = d.entries.map(function (e) {
-        var r = Object.assign({}, e);
-        delete r.fullPath;
-        if (r.firstPrompt) r.firstPrompt = r.firstPrompt.slice(0, 200);
-        return r;
-      });
+      d.entries = d.entries
+        .filter(function (e) { return isValidUUID(e.sessionId); })
+        .map(function (e) {
+          var r = Object.assign({}, e);
+          delete r.fullPath;
+          if (r.firstPrompt) r.firstPrompt = r.firstPrompt.slice(0, 200);
+          return r;
+        });
     }
     return d;
   } catch (e) {
@@ -23,7 +31,10 @@ function getProjectSessions(cwd) {
 
   // Fallback: scan .jsonl files
   try {
-    const files = fs.readdirSync(dir).filter(f => f.endsWith('.jsonl'));
+    const files = fs.readdirSync(dir).filter(function (f) {
+      if (!f.endsWith('.jsonl')) return false;
+      return isValidUUID(f.replace('.jsonl', ''));
+    });
     const entries = [];
 
     for (const file of files) {
