@@ -1,0 +1,8 @@
+{
+  "name": "sessions",
+  "description": "Browse past Claude Code sessions, view details, and resume or fork any session",
+  "author": {
+    "name": "Isuru Ranaweera"
+  },
+  "version": "2.0.0"
+}

@@ -1,0 +1,13 @@
+{
+  "name": "sessions-plugin",
+  "owner": {
+    "name": "Isuru Ranaweera"
+  },
+  "plugins": [
+    {
+      "name": "sessions",
+      "source": "./",
+      "description": "Browse past Claude Code sessions, view details, and resume or fork any session"
+    }
+  ]
+}
