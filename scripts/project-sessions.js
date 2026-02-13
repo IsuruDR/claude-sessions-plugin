@@ -98,6 +98,7 @@ function getProjectSessions(cwd) {
         d.entries = d.entries.concat(missing);
       }
     }
+    d.entries.sort(function (a, b) { return (b.modified || '').localeCompare(a.modified || ''); });
     return d;
   } catch (e) {
     // no index file — fall through to scan
@@ -105,6 +106,7 @@ function getProjectSessions(cwd) {
 
   // Fallback: scan all .jsonl files
   var missing = scanForMissingSessions(dir, new Set());
+  missing.sort(function (a, b) { return (b.modified || '').localeCompare(a.modified || ''); });
   return { entries: missing };
 }
 
