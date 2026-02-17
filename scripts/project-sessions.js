@@ -10,6 +10,8 @@ function parseSessionFile(filePath, fileId) {
   try {
     const lines = fs.readFileSync(filePath, 'utf8').split('\n');
     let br, firstPrompt, created, modified, sc = false, mc = 0;
+    const recentPrompts = [];
+    const MAX_RECENT = 3;
 
     for (const l of lines) {
       if (!l) continue;
@@ -23,14 +25,18 @@ function parseSessionFile(filePath, fileId) {
         }
         if (o.type === 'user' && !o.isMeta && o.message) {
           mc++;
-          if (!firstPrompt) {
-            const c = o.message.content;
-            if (typeof c === 'string' && !c.startsWith('<command') && !c.startsWith('[Request interrupted')) {
-              firstPrompt = c;
-            } else if (Array.isArray(c)) {
-              const t = c.find(x => x.type === 'text' && x.text && !x.text.startsWith('<command') && !x.text.startsWith('[Request interrupted'));
-              if (t) firstPrompt = t.text;
-            }
+          const c = o.message.content;
+          let text;
+          if (typeof c === 'string' && !c.startsWith('<command') && !c.startsWith('[Request interrupted')) {
+            text = c;
+          } else if (Array.isArray(c)) {
+            const t = c.find(x => x.type === 'text' && x.text && !x.text.startsWith('<command') && !x.text.startsWith('[Request interrupted'));
+            if (t) text = t.text;
+          }
+          if (text) {
+            if (!firstPrompt) firstPrompt = text;
+            recentPrompts.push(text.replace(/\n/g, ' ').slice(0, 200));
+            if (recentPrompts.length > MAX_RECENT) recentPrompts.shift();
           }
         }
         if (o.type === 'assistant') mc++;
@@ -41,6 +47,7 @@ function parseSessionFile(filePath, fileId) {
       return {
         sessionId: fileId,
         firstPrompt: firstPrompt ? firstPrompt.slice(0, 200) : '',
+        recentPrompts: recentPrompts,
         summary: firstPrompt ? firstPrompt.replace(/\n/g, ' ').slice(0, 80) : 'Untitled session',
         messageCount: mc,
         created: created || '',

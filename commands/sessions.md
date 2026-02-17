@@ -23,13 +23,13 @@ allowed-tools: [Bash, AskUserQuestion]
 If the current project sessions data above contains entries, sort by `modified` descending. Do NOT render a visual list. Go straight to `AskUserQuestion` with up to 4 options:
 - **header**: "Session"
 
-**Generating labels:** For each session, generate a short summary (5-8 words max) from its `firstPrompt` that captures the intent/topic. Examples:
-- "I want to create a claude plugin to see the available sessions..." → "Create sessions browser plugin"
-- "Can you add some subtle colors to make it..." → "Add colors to UI"
-- "Implement the following plan: # Plan: Rewrite Sessions Plugin..." → "Rewrite sessions plugin UX"
-- If `firstPrompt` is empty, use "Untitled session"
+**Generating labels:** For each session, generate a short summary (5-8 words max) that captures what the session is **currently** about. Use `recentPrompts` (the last few user messages) as the primary signal — they reflect the current direction. Fall back to `firstPrompt` only if `recentPrompts` is empty. Examples:
+- firstPrompt: "create a sessions plugin", recentPrompts: ["fix the sort order", "title doesn't update"] → "Fix session titles and sorting"
+- firstPrompt: "set up auth system", recentPrompts: ["add OAuth support for Google"] → "Add Google OAuth support"
+- recentPrompts empty, firstPrompt: "I want to create a claude plugin..." → "Create sessions browser plugin"
+- Both empty → "Untitled session"
 
-Do NOT just truncate the raw prompt — rephrase it as a concise topic label.
+Do NOT just truncate raw prompts — rephrase as a concise topic label reflecting the session's current focus.
 
 If there are **4 or fewer** total sessions, show all of them as options:
 - **label**: The generated summary (5-8 words)
