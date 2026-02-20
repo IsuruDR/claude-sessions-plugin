@@ -1,6 +1,7 @@
 # Sessions Plugin for Claude Code
 
-Browse and resume your past Claude Code sessions. Quickly pick a previous conversation and resume where you left off, or fork it into a new session.
+You want to resume a session, but when you use `/resume` all you see is some vague initial detail that you initiated the session with. You are often lost trying to correlate plan details with where you were to resume (or fork) the new piece of work.
+Browsing session history with the meaningful context helps here, and that is what this plugin exactly does. It scans your session history, generates concise labels from your most recent messages, and lets you browse, resume, or fork sessions with the context you need to jump right back in.
 
 ## Features
 
