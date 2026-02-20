@@ -1,6 +1,6 @@
 ---
 description: Browse and resume past sessions
-allowed-tools: [Bash, AskUserQuestion]
+allowed-tools: [AskUserQuestion]
 ---
 
 ## Data (already loaded — do NOT re-fetch)
@@ -33,7 +33,7 @@ Do NOT just truncate raw prompts — rephrase as a concise topic label reflectin
 
 If there are **4 or fewer** total sessions, show all of them as options:
 - **label**: The generated summary (5-8 words)
-- **description**: `{Mon DD} · {branch} · {N} msgs`
+- **description**: `{Mon DD} · {branch} · {sessionId}`
 
 If there are **5 or more** sessions, show the top 3 sessions + 1 "Older sessions" option (4 total):
 - Options 1-3: sessions as above
@@ -66,29 +66,14 @@ If the user selects "Back", re-render View 1 from the beginning. No narration.
 
 ## Command output
 
-**Session ID validation:** Before rendering the command, verify that the `sessionId` matches a UUID format (hexadecimal characters and hyphens only, e.g., `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`). If it does not match, display an error: "Invalid session ID format." and return to View 1. Do NOT render a shell command with an invalid session ID.
+**Session ID validation:** Before rendering the command, verify that the `sessionId` matches a UUID format (hexadecimal characters and hyphens only, e.g., `xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx`). If it does not match, display an error: "Invalid session ID format." and return to View 1. Do NOT render a command with an invalid session ID.
 
-When the user selects Resume or Fork:
-
-1. Copy the command to clipboard using `Bash`. Detect the platform and use the appropriate command:
-   - macOS: `printf '%s' "{command}" | pbcopy`
-   - Linux: `printf '%s' "{command}" | xclip -selection clipboard 2>/dev/null || printf '%s' "{command}" | xsel --clipboard 2>/dev/null`
-   - Check the exit code to determine if the copy succeeded.
-   Do NOT show any output from this step.
-2. Then output **only** the command block and the appropriate message:
+When the user selects Resume or Fork, output **only** the appropriate command:
 
 For **Resume**:
-```
-claude --resume '{sessionId}'
-```
+
+> Run: `/resume {sessionId}`
 
 For **Fork**:
-```
-claude --resume '{sessionId}' --fork-session
-```
 
-If clipboard copy succeeded:
-> Copied to clipboard. Run in a new terminal.
-
-If clipboard copy failed:
-> Copy the command above and run in a new terminal.
+> Run: `/fork {sessionId}`
